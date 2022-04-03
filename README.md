@@ -40,7 +40,7 @@ print(product.name, product.availability)
 
 You can use the example in [example folder](./example) :
 ```shell
-PYTHONPATH=. python3 example/main.py example/config.yml
+PYTHONPATH=src/ python3 example/main.py example/config.yml
 ```
 Result :
 ```shell
@@ -54,7 +54,8 @@ Doctor Who 21304   ==> out of stock
 - Clone or fork the repository.
 - Install dev dependencies with `pip3 install -r dev-requirements.txt`
 - Develop your feature or fix
-- Test it with `pytest` under [tests/](./tests) directory
+- Lint with [pylint](https://pylint.pycqa.org/en/latest/)
+- Test it with [pytest](https://pytest.org) under [tests/](./tests) directory
   - Mock HTTP requests with [responses](https://github.com/getsentry/responses)
 - Push & create a Pull Request on `develop` branch
 - Wait for the CI (Github Action) to exit in success state
