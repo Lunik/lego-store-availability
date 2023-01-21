@@ -1,5 +1,10 @@
 ---
 
+api:
+  cache_type: 'sqlite'
+  cache_opts:
+    cache_control: True
+
 store:
   lang: fr-fr
 

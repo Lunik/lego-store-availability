@@ -1,58 +1,53 @@
 import re
+from logging import getLogger
 
-from bs4 import BeautifulSoup
-from requests import Session
+from .api import LegoAPI
 
-HTTP_SESSION = Session()
-HTTP_SESSION.headers.update({"User-Agent": "Lunik/lego-store-availability"})
+logger = getLogger(__name__)
 
 NAME_REGEX = re.compile(r"^[^|]+")
 
 class Product:
   name = None
+  description = None
+  image_url = None
   availability = None
+  product_url = None
+  product_uri = None
+  item_id = None
+  retailer_item_id = None
+  price = None
 
-  def __init__(self, item_id):
+  def __init__(self, api, item_id=None, product_uri=None):
+    self.api = api
+
     self.item_id = item_id
-
-
-  @staticmethod
-  def _request_page(url):
-    response = HTTP_SESSION.get(url)
-
-    response.raise_for_status()
-
-    return response.content.decode("UTF-8")
-
+    self.product_uri = product_uri
 
   @staticmethod
-  def _parse_page(raw_html):
-    soup = BeautifulSoup(raw_html, "html.parser")
+  def _parse_page(soup):
+    title = LegoAPI.find_meta_header(soup, "og:title")
+    description = LegoAPI.find_meta_header(soup, "og:description")
+    image_url = LegoAPI.find_meta_header(soup, "og:image")
+    availability = LegoAPI.find_meta_header(soup, "product:availability")
+    price_amount = LegoAPI.find_meta_header(soup, "product:price:amount")
+    price_currency = LegoAPI.find_meta_header(soup, "product:price:currency")
+    retailer_item_id = LegoAPI.find_meta_header(soup, "product:retailer_item_id")
 
-    product_metas = soup.head.find_all(
-      lambda el:
-        el.name == "meta" and el.has_attr("property") and el["property"] == "og:title"
-    )
-    availability_metas = soup.head.find_all(
-      lambda el:
-        el.name == "meta" and el.has_attr("property") and el["property"] == "product:availability"
-    )
+    name = NAME_REGEX.search(title).group(0).strip()
+    price = f"{price_amount} {price_currency}"
 
-    if len(product_metas) <= 0:
-      raise Exception("No meta tag found. Unable to get product title")
-
-    if len(availability_metas) <= 0:
-      raise Exception("No meta tag found. Unable to get availability")
-
-    name = NAME_REGEX.search(product_metas[0]["content"]).group(0).strip()
-    availability = availability_metas[0]["content"]
-
-    return (name, availability)
-
+    return (name, description, image_url, availability, price, retailer_item_id)
 
   def load(self, store):
-    product_url = f"{store.base_url}/product/{self.item_id}"
+    if self.product_uri:
+      self.product_url = f"{store.root_url}/{self.product_uri}"
+    else:
+      self.product_url = f"{store.base_url}/product/{self.item_id}"
 
-    raw_page = Product._request_page(product_url)
+    logger.debug("Loading product at '%s'", self.product_url)
 
-    self.name, self.availability = Product._parse_page(raw_page)
+    soup = self.api.request_page(self.product_url)
+
+    (self.name, self.description, self.image_url,
+    self.availability, self.price, self.retailer_item_id) = Product._parse_page(soup)

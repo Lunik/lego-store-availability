@@ -2,7 +2,7 @@ import sys
 import yaml
 from yaml.loader import SafeLoader
 
-from lego_store_availability import Store, Product, LegoAPI
+from lego_store_availability import Store, LegoAPI
 
 def usage(argv):
   print(f"  Usage: {argv[0]} <CONFIG_FILE>")
@@ -19,9 +19,5 @@ if __name__ == "__main__":
   api = LegoAPI(**config["api"])
   store = Store(api=api, **config["store"])
 
-  for item_cfg in config["products"]:
-    product = Product(api=api, **item_cfg)
-
-    product.load(store)
-
+  for product in store.get_brickheadz():
     print(product.name, "==>", product.availability)

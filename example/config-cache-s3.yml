@@ -1,0 +1,18 @@
+---
+
+api:
+  cache_type: 's3'
+  cache_opts:
+    bucket_name: lego-store-cache
+    access_key_id: SCWXXXXXXXXXXXXX
+    secret_access_key: xxxxxxxxxxxxxxxxxxxxxxxxxx
+    endpoint_url: https://s3.fr-par.scw.cloud
+    cache_control: True
+
+store:
+  lang: fr-fr
+
+products:
+  - item_id: taj-mahal-21056
+  - item_id: ahsoka-tano-40539
+  - item_id: doctor-who-21304
