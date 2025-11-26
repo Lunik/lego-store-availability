@@ -12,4 +12,4 @@ dist
 
 build
 
-example/myconfig.yml
+.DS_Store

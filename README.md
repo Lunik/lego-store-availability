@@ -16,37 +16,32 @@ pip3 install lego-store-availability
 
 ## Usage
 
-First you need to create a `Store` object :
+First you need to create a `LegoAPI` object :
+
+```python
+from lego_store_availability import LegoAPI
+
+lego = LegoAPI()
+```
+
+Then request a `Store` :
 
 ```python
 from lego_store_availability import Store
 
-store = Store(lang="fr-fr")
+store = lego.store(lang="fr-fr")
 ```
 
-Then request a `Product` :
+Finally retrieve a `Product` :
 
 ```python
 from lego_store_availability import Product
 
-product = Product(id="ahsoka-tano-40539")
-
-product.load(store)
+product = store.product(
+    product_id="10307",
+)
 
 print(product.name, product.availability)
-```
-
-### Example
-
-You can use the example in [example folder](./example) :
-```shell
-PYTHONPATH=src/ python3 example/main.py example/config.yml
-```
-Result :
-```shell
-Le Taj Mahal 21056 ==> in stock
-Ahsoka Tano™ 40539 ==> out of stock
-Doctor Who 21304   ==> out of stock
 ```
 
 ## Contribute

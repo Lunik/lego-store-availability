@@ -1,62 +1,62 @@
-from importlib import import_module
-from logging import getLogger
+"""
+LEGO API
+"""
 
+from logging import getLogger
+from typing import Generator
+
+from httpx import Client as HttpxClient
 from bs4 import BeautifulSoup
-from requests_cache import CachedSession
+from tenacity import retry, stop_after_attempt, wait_exponential
+
+from .store import LegoStore
 
 logger = getLogger(__name__)
 
-cache_backend = dict(
-  sqlite='sqlite',
-  memory='memory',
-  s3=lambda: getattr(import_module('.cache', package='lego_store_availability'), 'S3Cache')
-)
 
 class LegoAPI:
-  supported_cache_backend = ['sqlite', 'memory', 's3']
+    """LEGO API"""
 
-  def __init__(self, cache_type="memory", cache_opts=None):
-    if cache_type not in self.supported_cache_backend:
-      raise Exception(f"Unsuported cache. Available {', '.join(self.supported_cache_backend)}")
+    base_url = "https://www.lego.com"
 
-    backend = cache_backend[cache_type]
-    if not isinstance(backend, str):
-      if cache_opts is None:
-        cache_opts = {}
-      backend = backend()(**cache_opts)
+    def __init__(self):
+        self.client = HttpxClient(
+            base_url=self.base_url,
+            headers={"User-Agent": "Lunik/lego-store-availability"},
+        )
 
-    self.session = CachedSession('lego-store-availability', backend=backend, use_cache_dir=True)
-    self.session.cache.responses.is_binary = True
-    self.session.headers.update({"User-Agent": "Lunik/lego-store-availability"})
+    def __repr__(self):
+        return "<LegoAPI>"
 
-
-  def request_page(self, url):
-    logger.debug("Requesting page with url '%s'", url)
-    response = self.session.get(url)
-
-    response.raise_for_status()
-
-    return BeautifulSoup(response.content.decode("UTF-8"), "html.parser")
-
-  @staticmethod
-  def find_meta_header(soup, property_name):
-    res = soup.head.find_all(
-      lambda el:
-        el.name == "meta" and el.has_attr("property") and el["property"] == property_name
+    @retry(
+        stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=4, max=10)
     )
+    def get_page(self, path: str = "/") -> BeautifulSoup:
+        """Get a page from the LEGO website"""
 
-    if len(res) <= 0:
-      print(f"No meta tag found. Unable to get {property_name}")
-      return None
+        response = self.client.get(url=path, follow_redirects=True)
+        response.raise_for_status()
 
-    return res[0]["content"]
+        return BeautifulSoup(response.content.decode("UTF-8"), "html.parser")
 
-  @staticmethod
-  def find_element_from_selector(soup, el_type, attrs=None, multi=False):
-    if attrs is None:
-      attrs = {}
+    def get_list_page(self, path: str = "/") -> Generator[BeautifulSoup, None, None]:
+        """Get a list page from the LEGO website"""
 
-    if multi:
-      return soup.find_all(el_type, attrs)
+        next_path = path
 
-    return soup.find(el_type, attrs)
+        while next_path:
+            soup = self.get_page(path=next_path)
+            yield soup
+
+            nav_next = soup.find("a", {"rel": "next"})
+            next_path = nav_next.get("href") if nav_next else None
+
+    def store(self, lang: str) -> LegoStore:
+        """Get a store by lang"""
+
+        store = LegoStore(
+            lego_api=self,
+            lang=lang,
+        )
+
+        return store
