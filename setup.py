@@ -4,11 +4,14 @@ setuptools.setup(
     name="lego-store-availability",
     install_requires=[
         "beautifulsoup4",
-        "requests",
-        "requests-cache",
-        "PyYAML"
+        "httpx",
+        "tenacity",
     ],
-    extras_require = {
-        'cache_s3':  ["boto3"]
-    }
+    extras_require={
+        "dev": [
+            "black",
+            "pylint",
+            "pytest",
+        ],
+    },
 )

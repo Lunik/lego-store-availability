@@ -1,3 +1,7 @@
-from .product import Product
-from .store import Store
+"""
+Lego Store Availability
+"""
+
 from .api import LegoAPI
+from .store import LegoStore
+from .product import LegoProduct

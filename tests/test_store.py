@@ -1,18 +1,71 @@
-from lego_store_availability import Store, LegoAPI
+import pytest
+from logging import getLogger
 
-api = LegoAPI(cache_type='memory')
+from bs4 import BeautifulSoup
 
-def test_baseurl_01():
-  store = Store(api)
+from lego_store_availability import LegoAPI, LegoStore, LegoProduct
 
-  assert store.base_url == "https://www.lego.com/fr-fr"
+logger = getLogger(__name__)
 
-def test_baseurl_02():
-  store = Store(api, lang="en-us")
+@pytest.fixture
+def lego():
+  return LegoAPI()
 
-  assert store.base_url == "https://www.lego.com/en-us"
+def test_store_product(lego):
+    store = lego.store(
+        lang="fr-fr",
+    )
 
-def test_baseurl_03():
-  store = Store(api, insecure=True)
+    product = store.product(
+        product_id="10307",
+    )
 
-  assert store.base_url == "http://www.lego.com/fr-fr"
+    assert isinstance(product, LegoProduct)
+    assert product.product_id == "10307"
+
+def test_store_new_products(lego):
+    store = lego.store(
+        lang="fr-fr",
+    )
+
+    products = store.new_products()
+    # Assert that the generator contains at least one product
+    first_product = next(products)
+    assert isinstance(first_product, LegoProduct)
+
+
+def test_store_theme(lego):
+    store = lego.store(
+        lang="fr-fr",
+    )
+
+    themes = store.themes
+    assert isinstance(themes, set)
+    assert len(themes) > 0
+    assert isinstance(themes.pop(), str)
+
+
+def test_store_products_from_theme(lego):
+    store = lego.store(
+        lang="fr-fr",
+    )
+
+    products = store.products_from_theme(
+        theme="brickheadz",
+    )
+    # Assert that the generator contains at least one product
+    first_product = next(products)
+    assert isinstance(first_product, LegoProduct)
+
+
+def test_store_products_from_fetched_theme(lego):
+    store = lego.store(
+        lang="fr-fr",
+    )
+
+    products = store.products_from_theme(
+        theme=store.themes.pop(),
+    )
+    # Assert that the generator contains at least one product
+    first_product = next(products)
+    assert isinstance(first_product, LegoProduct)
