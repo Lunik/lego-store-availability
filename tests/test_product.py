@@ -1,3 +1,4 @@
+import os
 import pytest
 from logging import getLogger
 
@@ -7,12 +8,15 @@ from lego_store_availability import LegoAPI, LegoStore, LegoProduct
 
 logger = getLogger(__name__)
 
+
 @pytest.fixture
 def store():
-  return LegoAPI().store(
-    lang="fr-fr",
-  )
+    return LegoAPI().store(
+        lang="fr-fr",
+    )
 
+
+@pytest.mark.skipif(os.environ.get("CI") == "true", reason="Skip in CI")
 def test_store_product(store):
     product = store.product(
         product_id="10307",

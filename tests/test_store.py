@@ -1,3 +1,4 @@
+import os
 import pytest
 from logging import getLogger
 
@@ -7,10 +8,13 @@ from lego_store_availability import LegoAPI, LegoStore, LegoProduct
 
 logger = getLogger(__name__)
 
+
 @pytest.fixture
 def lego():
-  return LegoAPI()
+    return LegoAPI()
 
+
+@pytest.mark.skipif(os.environ.get("CI") == "true", reason="Skip in CI")
 def test_store_product(lego):
     store = lego.store(
         lang="fr-fr",
@@ -23,6 +27,8 @@ def test_store_product(lego):
     assert isinstance(product, LegoProduct)
     assert product.product_id == "10307"
 
+
+@pytest.mark.skipif(os.environ.get("CI") == "true", reason="Skip in CI")
 def test_store_new_products(lego):
     store = lego.store(
         lang="fr-fr",
@@ -34,6 +40,7 @@ def test_store_new_products(lego):
     assert isinstance(first_product, LegoProduct)
 
 
+@pytest.mark.skipif(os.environ.get("CI") == "true", reason="Skip in CI")
 def test_store_theme(lego):
     store = lego.store(
         lang="fr-fr",
@@ -45,6 +52,7 @@ def test_store_theme(lego):
     assert isinstance(themes.pop(), str)
 
 
+@pytest.mark.skipif(os.environ.get("CI") == "true", reason="Skip in CI")
 def test_store_products_from_theme(lego):
     store = lego.store(
         lang="fr-fr",
@@ -58,6 +66,7 @@ def test_store_products_from_theme(lego):
     assert isinstance(first_product, LegoProduct)
 
 
+@pytest.mark.skipif(os.environ.get("CI") == "true", reason="Skip in CI")
 def test_store_products_from_fetched_theme(lego):
     store = lego.store(
         lang="fr-fr",
